@@ -1,9 +1,9 @@
 package rebelmythik.antiVillagerLag;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.MultiLineChart;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,6 +13,7 @@ import rebelmythik.antiVillagerLag.commands.ReloadCommand;
 import rebelmythik.antiVillagerLag.commands.RemoveChangesCommand;
 import rebelmythik.antiVillagerLag.commands.UnoptimizeCommand;
 import rebelmythik.antiVillagerLag.events.EventListener;
+import rebelmythik.antiVillagerLag.utils.TaskTracker;
 import rebelmythik.antiVillagerLag.utils.UpdateChecker;
 import rebelmythik.antiVillagerLag.utils.VillagerUtilities;
 
@@ -22,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class AntiVillagerLag extends JavaPlugin {
+
+    private final TaskTracker tasks = new TaskTracker();
+    private Metrics metrics;
 
     @Override
     public void onEnable() {
@@ -39,15 +43,13 @@ public final class AntiVillagerLag extends JavaPlugin {
         //  Config Stuff
         saveDefaultConfig();
         updateConfig();
-
-        VillagerUtilities.updateNameTags(this);
-        VillagerUtilities.updateStandingOnBlocks(this);
-        VillagerUtilities.updateWorkstationBlocks(this);
-        VillagerUtilities.updateRestockTimes(this);
+        synchronized (this) {
+            VillagerUtilities.publish(this);
+        }
 
         //  Bstats Code
         int pluginId = 15890;
-        Metrics metrics = new Metrics(this, pluginId);
+        metrics = new Metrics(this, pluginId);
         //  Optional: Add custom charts
         metrics.addCustomChart(new MultiLineChart("players_and_servers", () -> {
             Map<String, Integer> valueMap = new HashMap<>();
@@ -68,7 +70,14 @@ public final class AntiVillagerLag extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        //  Plugin shutdown logic
+        tasks.cancelAll();
+        if (metrics != null) {
+            metrics.shutdown();
+        }
+    }
+
+    public void track(ScheduledTask task) {
+        tasks.track(task);
     }
 
     //  Configuration File Updater

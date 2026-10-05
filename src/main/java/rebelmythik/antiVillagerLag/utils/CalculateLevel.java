@@ -4,9 +4,10 @@ import org.bukkit.entity.Villager;
 
 public class CalculateLevel {
     public static long villagerEXP(Villager vil) {
+        return levelForExperience(vil.getVillagerExperience());
+    }
 
-        int vilEXP = vil.getVillagerExperience();
-
+    public static long levelForExperience(int vilEXP) {
         // Villager Level depending on their XP
         // source: https://minecraft.fandom.com/wiki/Trading#Mechanics
 

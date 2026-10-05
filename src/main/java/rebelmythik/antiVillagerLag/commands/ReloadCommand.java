@@ -4,7 +4,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import rebelmythik.antiVillagerLag.AntiVillagerLag;
-import rebelmythik.antiVillagerLag.utils.ColorCode;
 import rebelmythik.antiVillagerLag.utils.VillagerUtilities;
 
 public class ReloadCommand implements CommandExecutor {
@@ -14,20 +13,18 @@ public class ReloadCommand implements CommandExecutor {
     public ReloadCommand(AntiVillagerLag plugin) {
         this.plugin = plugin;
     }
+
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("avlreload")) {
-            if(!sender.hasPermission("avl.reload")) {
-                sender.sendMessage(VillagerUtilities.colorcodes.cm(plugin.getConfig().getString("messages.no-permission")));
+            if (!sender.hasPermission("avl.reload")) {
+                sender.sendMessage(VillagerUtilities.colorcodes.cm(VillagerUtilities.settings().noPermission()));
                 return true;
             }
-            sender.sendMessage(VillagerUtilities.colorcodes.cm(plugin.getConfig().getString("messages.reload-message")));
-            plugin.reloadConfig();
-
-            //update the workblock blocks
-            VillagerUtilities.updateNameTags(plugin);
-            VillagerUtilities.updateStandingOnBlocks(plugin);
-            VillagerUtilities.updateWorkstationBlocks(plugin);
-            VillagerUtilities.updateRestockTimes(plugin);
+            sender.sendMessage(VillagerUtilities.colorcodes.cm(VillagerUtilities.settings().reloadMessage()));
+            synchronized (plugin) {
+                plugin.reloadConfig();
+                VillagerUtilities.publish(plugin);
+            }
         }
         return true;
     }
