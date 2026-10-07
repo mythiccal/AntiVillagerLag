@@ -37,7 +37,8 @@ public class NameTagAI {
     public static boolean fromName(Villager villager, PluginSettings settings) {
         if (!settings.useRenaming()) return false;
         String name = villager.getCustomName();
-        if (name != null) name = name.toLowerCase().replaceAll("(?i)[§&][0-9A-FK-ORXLo]", "");
+        if (name == null) return false;
+        name = name.toLowerCase().replaceAll("(?i)[§&][0-9A-FK-ORXLo]", "");
         return settings.disablingNames().contains(name);
     }
 }
